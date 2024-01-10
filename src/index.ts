@@ -28,7 +28,7 @@ async function getPic(
   const element = doc.querySelector("#contents li img");
   const imgUrl = element?.getAttribute("src");
   if (imgUrl) {
-    console.log(`download: ${baseUrl}${imgUrl}`)
+    console.log(`[${new Date().toISOString()}] download: ${baseUrl}${imgUrl}`)
     const imgResponse = await axios.get(`${baseUrl}${imgUrl}`, {
       responseType: "stream",
     });
@@ -58,7 +58,7 @@ async function getAllPic(type: string = "M", data: string = "sfc3", timeout: num
       setTimeout(() => {
         res();
       }, timeout);
-    })
+    });
     const tmFractions = tm.split('.');
     const nextDate = new Date(+tmFractions[0], +tmFractions[1] - 1, +tmFractions[2], +tmFractions[3] - 3);
     tm = `${nextDate.getFullYear()}.${nextDate.getMonth() + 1}.${nextDate.getDate()}.${nextDate.getHours()}`
@@ -66,4 +66,22 @@ async function getAllPic(type: string = "M", data: string = "sfc3", timeout: num
   }
 }
 
-getAllPic();
+async function getAllLoop(timeout: number = 24*60*60*1000) {
+  while (true) {
+    console.log(`[${new Date().toISOString()}] Start to download all pics`);
+    try {
+      await getAllPic();
+      console.log(`[${new Date().toISOString()}] Download completed, sleep for ${timeout}ms`);
+    } catch (e) {
+      console.log(`[${new Date().toISOString()}] Error download all pics, sleep for ${timeout}ms`);
+      console.log(e);
+    }
+    await new Promise<void>(res => {
+      setTimeout(() => {
+        res();
+      }, timeout);
+    })
+  }
+}
+
+getAllLoop();
